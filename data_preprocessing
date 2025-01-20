@@ -1,0 +1,87 @@
+# Data Preprocessing for OSR BNN Training and Testing
+
+# Engineering the datasets to create the custom sets made up of selected image classes and relabelled
+where necessary.
+#Stacking two separate datasets to create a mix:# combining different datasets through stacking for train or test
+# where y_test2FM is the previously filtered FMNIST Y_test data and y_testM is the previously filtered MNIST Y_test data
+
+
+y_test2FM = np.array(y_test2FM) # convert to numpy array if in list form
+y_test2FM = np.hstack(y_test2FM) # horizontal stack
+UnknownY = np.concatenate((y_test2FM, y_testM), axis = 0) # join data
+UnknownY_oh = to_categorical(UnknownY) # complete one hot encoding
+
+# For X
+X_test2FM = np.array(X_test2FM) # to array
+X_test2FM = np.vstack(X_test2FM) # vertical stacking
+UnknownX = np.concatenate((X_test2FM, X_testM), axis=0 # join data
+UknownX = UnknownX.astype('float32') / 255
+
+# import desired datasets
+# from tensorflow.keras.datasets import fashion_mnist
+# from tensorflow.keras.datasets import mnist
+#(X_train, Y_train), (X_test, Y_test) = mnist.load_data() # load datasets
+
+classes_example = [1, 3, 5, 6, 9] # classes to extract from dataset
+reset_list_example = [0, 1, 2, 3, 4] # what to relabel extractions as
+classes_example == reset_list_example # check matching lengths
+
+# extract the desired classes by their Y label value
+
+def create_filter(Y_train, Y_test, classes): # required X and Y data and a list of classes to extract
+    train_filter0 = np.where(np.in1d(Y_train, classes)) # takes data with label
+    X_train0, Y_train0 = X_train[train_filter0], Y_train[train_filter0]
+    test_filter0 = np.where(np.in1d(Y_test, classes))
+    X_test0, Y_test0 = X_test[test_filter0], Y_test[test_filter0]
+    return X_train0, Y_train0, X_test0, Y_test0
+
+def reset_index(Y_data, classes, reset_list):
+    classes1 = np.array(classes) # to array
+    reset_list1 = np.array(reset_list)
+    arr = np.empty(Y_data.max() + 1, dtype=reset_list1.dtype)
+    arr[classes1] = reset_list1 # map numbers in one array to the other
+    FinalY_data = arr[Y_data]
+    FinalY_data = FinalY_data.astype(int)
+    return FinalY_data
+
+X_train1, Y_train1, X_test1, Y_test1 = create_filter(Y_train, Y_test,classes_example) # filter by list
+Y_train1 = reset_index(Y_train1, classes_example, reset_list_example) # alter class labels
+Y_test1 = reset_index(Y_test1,classes_example, reset_list_example)
+
+#Creating a training set with a background class of mixed images and a test set of known and
+#unknown images: Creating background model training and testing sets from single large dataset
+
+full_list15 = [*range(0, 15, 1)] # full extraction of 15 classes
+control_set = [0, 1, 2, 3, 4] # control labels for 5 classes (0-4) label "5" for background mix
+rinx_other15 = [5]*10 # reindexing for "other" mix, list of 10
+"5"
+rinx15 = control_set + rinx_other # full reindexing list for extracted classes
+
+len(rinx25) == len(full_list25) # check lengths match and no errors
+
+# create training set
+
+X_train15, Y_train15, X_test15, Y_test15 = create_filter(Y_train, Y_test,
+full_list15) # take labels 0-14
+Y_train15 = reset_index(Y_train15, full_list15, rinx15) # reindex
+Y_test15 = reset_index(Y_test15, full_list15, rinx15)
+
+# create test set of control classes and unseen images
+
+Unseen15 = [0, 1, 2, 3, 4, 42, 43, 46] # control + any labels not in
+previous list
+Unseen25rinx = [0, 1, 2, 3, 4, 5, 5, 5] # reindexing, control + number of unknowns in list
+
+X_train15U, Y_train15U, X_test15U, Y_test15U = create_filter(Y_train, Y_test, Unseen15)
+
+Y_test15U = reset_index(Y_test15U, Unseen15, Unseen15rinx)
+X_train15 = X_train15.astype('float32') / 255 # normalise
+X_test15 = X_test15.astype('float32') / 255
+X_test15U = X_test15U.astype('float32') / 255
+X_train15U = X_train15U.astype('float32') / 255
+#validation sets for observing fitting
+x_train15, x_val15, y_train15, y_val15 = train_test_split(X_train15, Y_train15, test_size=0.2, random_state=1)
+
+
+
+
